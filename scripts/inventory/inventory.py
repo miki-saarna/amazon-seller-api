@@ -24,6 +24,8 @@ class Gen_Inventory_Report():
         self.gs_inventory = getSpreadsheet(const.GS_INVENTORY_ID, const.GS_INVENTORY_NAME)
         self.sku_list = self.gs_inventory.col_values(2)[2:]
         self.download_report()
+        self.extract_inventory_from_report()
+        self.gs_inventory.batch_update(self.data)
         self.update_row = f'{chr(64 + 2)}{1}'
         self.gs_inventory.update(self.update_row, datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
         
@@ -63,13 +65,13 @@ class Gen_Inventory_Report():
             auth=self.auth
         )
         report_URL = download_report.json()['url']
-        file_name = f"~/Downloads/inventory_report_{self.report_request_id}.csv"
-        urllib.request.urlretrieve(report_URL, os.path.expanduser(file_name))
+        self.file_name = f"~/Downloads/inventory_report_{self.report_request_id}.csv"
+        urllib.request.urlretrieve(report_URL, os.path.expanduser(self.file_name))
 
-        DataFrame = pd.read_csv(file_name, sep='\t')
-        # value = DataFrame.iloc[4, 9] # reads value found at specified row and column
+    def extract_inventory_from_report(self):
+        DataFrame = pd.read_csv(self.file_name, sep='\t')
 
-        data = []
+        self.data = []
 
         for _, row in DataFrame.iterrows():
             sku = row['sku']
@@ -81,22 +83,20 @@ class Gen_Inventory_Report():
                 if sku in row:
                     row_number = idx + 3
 
-                    data.append({
+                    self.data.append({
                         "range": f'{chr(64 + 4)}{row_number}',
                         "values": [[available]]
                     })
-                    data.append({
+                    self.data.append({
                         "range": f'{chr(64 + 5)}{row_number}',
                         "values": [[inbound]]
                     })
-                    data.append({
+                    self.data.append({
                         "range": f'{chr(64 + 6)}{row_number}',
                         "values": [[reserved]]
                     })
 
                     break # is break necessary here?
-
-        self.gs_inventory.batch_update(data)
 
 def createInventoryReport():
     data = {
