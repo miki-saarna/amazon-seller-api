@@ -43,6 +43,7 @@ class Gen_Inventory_Report():
         return report_request_id
     
     def get_report_doc_id(self):
+        start_time = datetime.datetime.now().timestamp()
         report_status = ''
         while report_status != "DONE":
             report_status_response = requests.get(f"{self.SP_API_URL}/reports/{self.report_request_id}",
@@ -57,7 +58,12 @@ class Gen_Inventory_Report():
             elif report_status == "FATAL":
                 break
             else:
-                time.sleep(10)
+                current_time = datetime.datetime.now().timestamp()
+                surpassed_time = current_time - start_time
+                if surpassed_time > 120:
+                    break
+                else:
+                  time.sleep(10)
 
     def download_report(self):
         download_report = requests.get(f"{self.SP_API_URL}/documents/{self.report_document_id}",
