@@ -69,7 +69,7 @@ class Gen_Inventory_Report():
         DataFrame = pd.read_csv(file_name, sep='\t')
         # value = DataFrame.iloc[4, 9] # reads value found at specified row and column
 
-        gs_updates = []
+        data = []
 
         for _, row in DataFrame.iterrows():
             sku = row['sku']
@@ -80,33 +80,23 @@ class Gen_Inventory_Report():
             for idx, row in enumerate(self.sku_list):
                 if sku in row:
                     row_number = idx + 3
-                    # cell_address = f'{chr(64 + 4)}{row_number}'
-                    # cell_address_inbound = f'{chr(64 + 5)}{row_number}'
-                    # cell_address_reserved = f'{chr(64 + 6)}{row_number}'
-                    # self.gs_inventory.update(cell_address, available)
-                    # self.gs_inventory.update(cell_address_inbound, inbound)
-                    # self.gs_inventory.update(cell_address_reserved, reserved)
 
-                    gs_updates.append({
+                    data.append({
                         "range": f'{chr(64 + 4)}{row_number}',
                         "values": [[available]]
                     })
-                    gs_updates.append({
+                    data.append({
                         "range": f'{chr(64 + 5)}{row_number}',
                         "values": [[inbound]]
                     })
-                    gs_updates.append({
+                    data.append({
                         "range": f'{chr(64 + 6)}{row_number}',
                         "values": [[reserved]]
                     })
 
                     break # is break necessary here?
-        body = {
-            "valueInputOption": "USER_ENTERED",
-            "data": gs_updates
-        }        
-        self.gs_inventory.batch_update(body)
 
+        self.gs_inventory.batch_update(data)
 
 def createInventoryReport():
     data = {
